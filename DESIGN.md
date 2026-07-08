@@ -20,7 +20,7 @@ the left, visualization on the right.
 
 ### Non-goals (for now)
 
-- No arithmetic, control flow, return values, heap, or dereferencing.
+- No arithmetic, control flow, heap, or dereferencing.
 - No real code generation or execution — the "machine" is a model.
 - No backend; the app ships as static files.
 
@@ -44,7 +44,8 @@ Standing assumptions (raised during review, not objected to):
   therefore legal.
 - Pointers are created only with `&variable` (address of a local or
   parameter). No dereference, no pointer arithmetic.
-- Functions have no return values.
+- Functions may return a value (`int` or `ptr`) via `rax`, or be void;
+  see §3 and §4.4.
 - `int` is 4 bytes (32-bit signed), `ptr` is 8 bytes. The size mismatch
   makes alignment and padding visible in the frame layout.
 
@@ -53,15 +54,16 @@ Standing assumptions (raised during review, not objected to):
 ### 3.1 Example
 
 ```
-fn helper(a: int, p: ptr) {
+fn helper(a: int, p: ptr) -> int {
     let local: int = a;
+    return local;
 }
 
 fn outer(n: int) {
     let x: int = 42;
     let px: ptr = &x;
-    helper(x, px);
-    helper(n, px);
+    let r: int = helper(x, px);
+    helper(n, px);              // result discarded
 }
 
 fn main() {
@@ -73,21 +75,27 @@ fn main() {
 
 ```
 program    := function+
-function   := "fn" IDENT "(" [ params ] ")" block
+function   := "fn" IDENT "(" [ params ] ")" [ "->" type ] block
 params     := param { "," param }          // at most 3
 param      := IDENT ":" type
 type       := "int" | "ptr"
 block      := "{" { stmt } "}"
-stmt       := letStmt | callStmt
-letStmt    := "let" IDENT ":" type "=" expr ";"
-callStmt   := IDENT "(" [ args ] ")" ";"
+stmt       := letStmt | callStmt | returnStmt
+letStmt    := "let" IDENT ":" type "=" init ";"
+init       := expr | callExpr
+callStmt   := callExpr ";"
+callExpr   := IDENT "(" [ args ] ")"
+returnStmt := "return" [ expr ] ";"
 args       := expr { "," expr }
 expr       := INT_LITERAL | IDENT | "&" IDENT
 ```
 
 - Line comments with `//`.
 - Identifiers: `[A-Za-z_][A-Za-z0-9_]*`, excluding keywords
-  (`fn`, `let`, `int`, `ptr`).
+  (`fn`, `let`, `int`, `ptr`, `return`).
+- A call may appear as a statement (result discarded, if any) or as the
+  entire initializer of a `let` — but not nested inside arguments
+  (`foo(bar())` is invalid), keeping evaluation order trivial.
 - `INT_LITERAL`: optional `-`, decimal digits; must fit in a signed
   32-bit integer.
 
@@ -105,8 +113,15 @@ Checked after parsing; all violations are reported with line/column:
    same function (no shadowing across params/locals within a function;
    duplicate names are an error).
 5. Types must match: an `int` slot takes an int literal or an `int`
-   variable; a `ptr` slot takes `&x` or a `ptr` variable.
+   variable; a `ptr` slot takes `&x` or a `ptr` variable. A `let`
+   initialized by a call requires the callee's return type to match the
+   slot type (calling a void function in a `let` is an error).
 6. `&x` requires `x` to be a visible local or parameter.
+7. Return discipline: since there is no control flow, a function with a
+   declared return type must have exactly one `return expr;`, as its
+   final statement, with a matching expression type. A void function may
+   end with a bare `return;` or omit it. `main` is void. `return`
+   anywhere but the last statement is an error (unreachable code).
 
 ### 3.4 Dynamic semantics
 
@@ -116,8 +131,10 @@ Execution is a straightforward tree walk over statements:
   stack slot.
 - A call evaluates arguments in the caller, models the register handoff,
   pushes a new frame, spills the arguments into it, and executes the
-  callee's body; when the body ends the frame pops and control returns to
-  the statement after the call.
+  callee's body. On `return expr;` (or the end of a void body) the frame
+  pops, the return value — if any — travels back in `rax`, and control
+  returns to the call site: a `let`-call writes `rax` into the new
+  local's slot, a statement-call discards it.
 - Execution ends when `main`'s body ends.
 - If a call would create a 9th live frame, execution halts in a
   **stack overflow** state (see §5.4).
@@ -186,7 +203,23 @@ interface CallingConvention {
 
 Everything downstream (stepper, renderer) consumes `FrameLayout` and never
 hardcodes System V details, so adding Windows x64 (shadow space, rcx/rdx/r8)
-later is a new implementation plus a dropdown entry.
+later is a new implementation plus a dropdown entry. The interface also
+names the return register (`returnRegister: "rax"` for System V).
+
+### 4.4 Return values
+
+Per System V, a scalar return value (`int` or `ptr` — both fit) travels
+in `rax`; nothing about returning touches the stack layout. The model
+tracks `rax` as a single named register value:
+
+- During a **pop** transition of a non-void function, the returned value
+  is shown leaving the dying frame in an `rax` chip; if the call site was
+  a `let`, the next step writes it into the caller's new local slot.
+- Between calls `rax` is displayed as clobbered/undefined — a small
+  honest detail that discourages reading meaning into stale values.
+- Returning `&local` is legal and produces a pointer that is **dangling**
+  the moment its frame pops (§4.2) — the classic
+  return-address-of-local bug, visualized.
 
 ## 5. Execution engine
 
@@ -199,11 +232,14 @@ pure function of state.
 
 Micro-steps per statement:
 
-- `let`: one step — evaluate, write slot.
+- `let` with a plain expression: one step — evaluate, write slot.
 - call: two visible transitions — **push** (new frame appears with args
   spilled, locals uninitialized) and, after the body completes, **pop**
-  (frame disappears, control returns to caller). Prologue/epilogue are
+  (frame disappears, return value rides out in the `rax` chip, control
+  returns to caller). For a `let`-call, the pop is followed by one more
+  step that writes `rax` into the caller's slot. Prologue/epilogue are
   modeled inside these transitions, not stepped individually.
+- `return`: evaluates its expression into `rax` and triggers the pop.
 
 ### 5.2 Controls
 
@@ -277,7 +313,8 @@ Compiler-Explorer-style split view (draggable divider):
 - Diagnostics from the parser/checker as underlines + gutter markers,
   re-checked on a ~300 ms debounce.
 - A samples dropdown seeds the editor (basic calls, pointers & padding,
-  recursion to exactly 8 frames, overflow demo).
+  return values, dangling `return &local`, recursion to exactly 8 frames,
+  overflow demo).
 - Program persisted to `localStorage`; a share button encodes it into the
   URL fragment.
 
@@ -321,6 +358,6 @@ the overflow rule).
 
 - Additional calling conventions (Windows x64 shadow space is the most
   instructive contrast) via the `CallingConvention` interface.
-- Return values (`rax`), arithmetic and dereference expressions.
+- Arithmetic and dereference expressions; nested call expressions.
 - Red zone visualization, callee-saved register modeling.
 - Timeline scrubber over the immutable snapshot history.
