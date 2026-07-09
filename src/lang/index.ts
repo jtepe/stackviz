@@ -1,3 +1,7 @@
-// Language front-end: tokenizer, parser, AST, checker, diagnostics.
-// See DESIGN.md §3 and Milestone 2. Implemented in a later issue.
-export {};
+// Language front-end: tokenizer, parser, AST, diagnostics (DESIGN.md §3).
+// The static checker (§3.3) lands in a later issue.
+
+export * from './diagnostics';
+export * from './tokenizer';
+export * from './ast';
+export * from './parser';
