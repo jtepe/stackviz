@@ -18,24 +18,30 @@ The build outputs static files to `dist/`.
 ## Running
 
 **Development:**
+
 ```bash
 npm run dev
 ```
+
 Opens a local dev server with hot reload.
 
 **Preview:**
+
 ```bash
 npm run preview
 ```
+
 Serves the built app locally for testing.
 
 **Tests:**
+
 ```bash
 npm run test           # Run once
 npm run test:watch     # Watch mode
 ```
 
 **Linting & formatting:**
+
 ```bash
 npm run lint           # Check code style (ESLint)
 npm run format         # Apply formatting (Prettier)
