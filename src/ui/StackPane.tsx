@@ -1,7 +1,6 @@
 /**
  * Right panel: the call-stack visualization. A placeholder for now — the
- * toolbar, status badge, and frame rendering land in later issues
- * (DESIGN.md §6.1).
+ * toolbar, status badge, and frame rendering land in later issues.
  */
 export function StackPane() {
   return (

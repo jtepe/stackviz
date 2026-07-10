@@ -1,6 +1,6 @@
 /**
  * Left panel: the source editor. A placeholder for now — CodeMirror 6 and the
- * language integration land in a later issue (DESIGN.md §6.2).
+ * language integration land in a later issue.
  */
 export function EditorPane() {
   return (

@@ -8,7 +8,7 @@ function parseOk(source: string) {
   return program;
 }
 
-// The example program from DESIGN.md §3.1, verbatim.
+// A reference program exercising every statement and expression form.
 const EXAMPLE = `fn helper(a: i32, p: &i32) -> i32 {
     let local: i32 = a;
     return local;
@@ -27,7 +27,7 @@ fn main() {
 `;
 
 describe('parser', () => {
-  it('parses the DESIGN.md §3.1 example into the documented AST shape', () => {
+  it('parses the reference example into the expected AST shape', () => {
     const program = parseOk(EXAMPLE);
     expect(stripSpans(program)).toEqual({
       kind: 'Program',

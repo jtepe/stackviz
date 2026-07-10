@@ -17,7 +17,7 @@ interface SplitPaneProps {
 
 /**
  * Compiler-Explorer-style split view: two side-by-side panels separated by a
- * draggable divider. See DESIGN.md §6.1.
+ * draggable divider.
  */
 export function SplitPane({
   left,
