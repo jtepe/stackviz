@@ -1,6 +1,6 @@
-// Tokenizer for the pseudo language (DESIGN.md §3.2). Produces a flat token
-// list plus diagnostics; every token carries a source span. No DOM/React
-// dependencies (DESIGN.md §7).
+// Tokenizer for the pseudo language. Produces a flat token list plus
+// diagnostics; every token carries a source span. Must stay free of DOM and
+// React dependencies.
 
 import { Diagnostic, Position, Span, error } from './diagnostics';
 

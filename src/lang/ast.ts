@@ -1,6 +1,6 @@
-// AST for the pseudo language, mirroring the grammar in DESIGN.md §3.2.
-// Every node carries a source span. These types are consumed by the checker,
-// the execution engine, and the UI, so keep them dependency-free.
+// AST for the pseudo language, mirroring the grammar one production at a
+// time. Every node carries a source span. These types are consumed by the
+// checker, the execution engine, and the UI, so keep them dependency-free.
 
 import { Span } from './diagnostics';
 
@@ -75,8 +75,8 @@ export interface ReturnStmt {
 /**
  * Simple expressions — the only forms allowed as call arguments and `return`
  * values. Calls are deliberately not part of this union: they may appear only
- * as a statement, a `let` initializer, or a tail expression (DESIGN.md §3.2),
- * so nested calls are unrepresentable in the AST.
+ * as a statement, a `let` initializer, or a tail expression, so nested calls
+ * are unrepresentable in the AST.
  */
 export type Expr = IntLiteral | VarExpr | RefExpr;
 

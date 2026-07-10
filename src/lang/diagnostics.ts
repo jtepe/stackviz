@@ -1,6 +1,6 @@
-// Source positions, spans, and the diagnostics data model (DESIGN.md §3.3,
-// §6.2). Diagnostics are produced by the tokenizer and parser here, and by
-// the checker in a later milestone; the UI renders them as editor underlines.
+// Source positions, spans, and the diagnostics data model. Diagnostics are
+// produced by the tokenizer and parser here, and by the checker in a later
+// milestone; the UI renders them as editor underlines.
 
 /** A point in the source. `line` and `column` are 1-based, `offset` is the 0-based character index. */
 export interface Position {

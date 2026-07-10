@@ -1,4 +1,4 @@
-// Recursive-descent parser for the grammar in DESIGN.md §3.2. Reports
+// Recursive-descent parser for the pseudo language grammar. Reports
 // rustc-styled diagnostics with precise spans and recovers at statement and
 // function boundaries so multiple errors can be reported in one pass.
 
@@ -25,9 +25,8 @@ export interface ParseResult {
 }
 
 /**
- * Parameter arity is enforced here in the parser (the grammar itself notes
- * "at most 3"); the checker does not re-check it. Three matches the modeled
- * argument registers rdi/rsi/rdx (DESIGN.md §2).
+ * Parameter arity is enforced here in the parser; the checker does not
+ * re-check it. Three matches the modeled argument registers rdi/rsi/rdx.
  */
 export const MAX_PARAMS = 3;
 
@@ -382,8 +381,8 @@ class Parser {
 /**
  * Tokenize and parse a source string. The returned diagnostics combine
  * tokenizer errors (first) and parser errors; an empty list means the
- * program is grammatically valid (static semantics are checked separately,
- * DESIGN.md §3.3).
+ * program is grammatically valid (static semantics are checked separately
+ * by the checker).
  */
 export function parse(source: string): ParseResult {
   const { tokens, diagnostics } = tokenize(source);
