@@ -1,7 +1,7 @@
-// Language front-end: tokenizer, parser, AST, diagnostics.
-// The static checker lands in a later issue.
+// Language front-end: tokenizer, parser, AST, checker, diagnostics.
 
 export * from './diagnostics';
 export * from './tokenizer';
 export * from './ast';
 export * from './parser';
+export * from './checker';
