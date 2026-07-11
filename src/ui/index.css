@@ -142,6 +142,207 @@ body {
   font-size: 0.9rem;
 }
 
+/* Stack panel */
+.stack-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.detail-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+.detail-toggle button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.rax-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.stack-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.stack-base-label,
+.stack-grow-cue {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.stack-empty {
+  color: var(--text-muted);
+}
+
+/* Frames: hue is per function, shade shifts per recursive activation. */
+.frame {
+  --frame-border: hsl(
+    var(--frame-hue) 55% calc(48% - var(--frame-shade) * 8%)
+  );
+  --frame-bg: hsl(var(--frame-hue) 28% calc(15% + var(--frame-shade) * 4%));
+  border: 1px solid var(--frame-border);
+  border-radius: 6px;
+  background: var(--frame-bg);
+  overflow: hidden;
+}
+
+.frame-active {
+  box-shadow: 0 0 0 2px var(--frame-border);
+}
+
+.frame-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-bottom: 1px solid var(--frame-border);
+  background: hsl(var(--frame-hue) 35% calc(20% + var(--frame-shade) * 4%));
+}
+
+.frame-name {
+  font-weight: 700;
+}
+
+.frame-depth {
+  font-size: 0.7rem;
+  color: var(--bg);
+  background: var(--frame-border);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+}
+
+.frame-origin {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.frame-active-tag {
+  margin-left: auto;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.frame-slots {
+  display: flex;
+  flex-direction: column;
+}
+
+.slot {
+  display: grid;
+  grid-template-columns: 8.5rem 3.5rem 2.8rem minmax(6rem, auto) 1fr;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.2rem 0.6rem;
+}
+
+.slot + .slot {
+  border-top: 1px solid
+    hsl(var(--frame-hue) 30% calc(22% + var(--frame-shade) * 4%));
+}
+
+.slot-address {
+  color: var(--text-muted);
+}
+
+.slot-offset,
+.slot-size {
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.slot-padding {
+  color: var(--text-muted);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgb(255 255 255 / 0.05) 4px,
+    rgb(255 255 255 / 0.05) 8px
+  );
+}
+
+.register-badge {
+  margin-left: 0.4rem;
+  font-size: 0.65rem;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}
+
+.value-uninitialized,
+.value-clobbered {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.dangling-badge {
+  margin-left: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #f38ba8;
+  border: 1px solid #f38ba8;
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}
+
+.frame-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.frame-chips-empty {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--frame-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  background: hsl(var(--frame-hue) 32% calc(22% + var(--frame-shade) * 4%));
+}
+
 .editor-host {
   padding: 0;
   overflow: hidden;
