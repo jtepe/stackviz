@@ -19,7 +19,7 @@ describe('App shell', () => {
 
   it('starts the seed program ready to step', () => {
     render(<App />);
-    expect(screen.getByLabelText('Execution status')).toHaveTextContent(
+    expect(screen.getByLabelText(/Execution status/)).toHaveTextContent(
       'ready',
     );
     expect(screen.getByText('0x7fffffffe000')).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('App shell', () => {
     expect(
       screen.getByRole('article', { name: 'main frame' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Execution status')).toHaveTextContent(
+    expect(screen.getByLabelText(/Execution status/)).toHaveTextContent(
       'running',
     );
     expect(screen.getByRole('button', { name: 'Reset' })).toBeEnabled();
@@ -44,7 +44,7 @@ describe('App shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Step' }));
     fireEvent.click(screen.getByRole('button', { name: 'Step' }));
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-    expect(screen.getByLabelText('Execution status')).toHaveTextContent(
+    expect(screen.getByLabelText(/Execution status/)).toHaveTextContent(
       'ready',
     );
     expect(screen.queryByRole('article')).not.toBeInTheDocument();

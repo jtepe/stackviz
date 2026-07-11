@@ -165,7 +165,7 @@ describe('StackPane byte-accurate mode', () => {
 describe('StackPane rax chip', () => {
   it('shows rax as clobbered between calls', () => {
     renderPane(...preview(PROGRAM));
-    const chip = screen.getByLabelText('rax register');
+    const chip = screen.getByLabelText(/rax register/);
     expect(chip).toHaveTextContent('clobbered');
   });
 
@@ -176,7 +176,7 @@ describe('StackPane rax chip', () => {
       state = step(state);
     }
     renderPane(analysis, state);
-    const chip = screen.getByLabelText('rax register');
+    const chip = screen.getByLabelText(/rax register/);
     expect(chip).toHaveTextContent('42');
   });
 });

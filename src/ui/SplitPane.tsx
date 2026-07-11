@@ -13,6 +13,8 @@ interface SplitPaneProps {
   initialLeftFraction?: number;
   /** Minimum fraction either panel may shrink to (0–0.5). */
   minFraction?: number;
+  /** Accessible label for the draggable divider. */
+  label?: string;
 }
 
 /**
@@ -24,6 +26,7 @@ export function SplitPane({
   right,
   initialLeftFraction = 0.5,
   minFraction = 0.15,
+  label = 'Resize panels',
 }: SplitPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [leftFraction, setLeftFraction] = useState(initialLeftFraction);
@@ -91,6 +94,7 @@ export function SplitPane({
       <div
         className={`split-divider${dragging ? ' is-dragging' : ''}`}
         role="separator"
+        aria-label={label}
         aria-orientation="vertical"
         aria-valuenow={Math.round(leftFraction * 100)}
         aria-valuemin={Math.round(minFraction * 100)}
