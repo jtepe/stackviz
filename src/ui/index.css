@@ -141,3 +141,19 @@ body {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+.editor-host {
+  padding: 0;
+  overflow: hidden;
+}
+
+.editor-host .cm-editor {
+  height: 100%;
+}
+
+.editor-host .cm-scroller {
+  font-family:
+    'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+  font-size: 0.9rem;
+}

@@ -5,3 +5,4 @@ export * from './tokenizer';
 export * from './ast';
 export * from './parser';
 export * from './checker';
+export * from './analyze';
