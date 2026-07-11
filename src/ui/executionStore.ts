@@ -16,7 +16,11 @@ import {
 
 /** The engine's status, plus `editing` while the program has problems. */
 export type AppStatus =
-  'editing' | 'ready' | 'running' | 'finished' | 'overflow';
+  | 'editing'
+  | 'ready'
+  | 'running'
+  | 'finished'
+  | 'overflow';
 
 export type Command = 'step' | 'step-over' | 'step-out' | 'run' | 'reset';
 

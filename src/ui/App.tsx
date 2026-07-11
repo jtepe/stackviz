@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { SplitPane } from './SplitPane';
 import { EditorPane } from './EditorPane';
 import { StackPane } from './StackPane';
@@ -11,22 +11,61 @@ import {
   initialAppState,
   type Command,
 } from './executionStore';
-import type { Analysis } from '../lang';
+import {
+  EMPTY_HOVER,
+  callSiteOfFrame,
+  callSpanAt,
+  collectCallSpans,
+  liveFrameForCallSpan,
+  sameSpan,
+  type HoverState,
+  type RefHover,
+} from './hover';
+import type { Analysis, Span } from '../lang';
 
 const RUN_STEP_MS = 350;
 const NOTICE_MS = 2500;
 
+function toRange(span: Span | null) {
+  return span ? { from: span.start.offset, to: span.end.offset } : null;
+}
+
 export function App() {
   const [state, dispatch] = useReducer(appReducer, initialAppState);
+  const [hover, setHover] = useState<HoverState>(EMPTY_HOVER);
 
-  const handleAnalysis = useCallback(
-    (analysis: Analysis) => dispatch({ type: 'analysis', analysis }),
-    [],
+  const handleAnalysis = useCallback((analysis: Analysis) => {
+    dispatch({ type: 'analysis', analysis });
+  }, []);
+  const handleCommand = useCallback((command: Command) => {
+    dispatch({ type: 'command', command });
+    setHover(EMPTY_HOVER);
+  }, []);
+
+  const callSpans = useMemo(
+    () => (state.analysis ? collectCallSpans(state.analysis.program) : []),
+    [state.analysis],
   );
-  const handleCommand = useCallback(
-    (command: Command) => dispatch({ type: 'command', command }),
-    [],
+
+  const handleHoverOffset = useCallback(
+    (offset: number | null) => {
+      const span = offset === null ? null : callSpanAt(callSpans, offset);
+      setHover((prev) =>
+        sameSpan(prev.callSpan, span) ? prev : { ...prev, callSpan: span },
+      );
+    },
+    [callSpans],
   );
+
+  const handleFrameHover = useCallback((frameId: number | null) => {
+    setHover((prev) =>
+      prev.frameId === frameId ? prev : { ...prev, frameId },
+    );
+  }, []);
+
+  const handleRefHover = useCallback((ref: RefHover | null) => {
+    setHover((prev) => (prev.ref === ref ? prev : { ...prev, ref }));
+  }, []);
 
   useEffect(() => {
     if (!state.autorun) return;
@@ -47,6 +86,22 @@ export function App() {
   }, [state.resetNotice]);
 
   const currentOffset = state.execution?.currentLocation?.start.offset ?? null;
+  const frames = state.execution?.frames;
+
+  const highlightRange = useMemo(() => {
+    if (frames && hover.frameId !== null) {
+      return toRange(callSiteOfFrame(frames, hover.frameId));
+    }
+    return toRange(hover.callSpan);
+  }, [frames, hover.frameId, hover.callSpan]);
+
+  const linkedFrameId = useMemo(
+    () =>
+      frames && hover.callSpan
+        ? liveFrameForCallSpan(frames, hover.callSpan)
+        : null,
+    [frames, hover.callSpan],
+  );
 
   return (
     <div className="app">
@@ -59,6 +114,8 @@ export function App() {
           <EditorPane
             onAnalysis={handleAnalysis}
             currentOffset={currentOffset}
+            highlightRange={highlightRange}
+            onHoverOffset={handleHoverOffset}
           />
         }
         right={
@@ -75,7 +132,14 @@ export function App() {
                 Program changed — execution reset.
               </div>
             )}
-            <StackPane analysis={state.analysis} state={state.execution} />
+            <StackPane
+              analysis={state.analysis}
+              state={state.execution}
+              linkedFrameId={linkedFrameId}
+              refHover={hover.ref}
+              onFrameHover={handleFrameHover}
+              onRefHover={handleRefHover}
+            />
           </div>
         }
         initialLeftFraction={0.5}

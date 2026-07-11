@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react';
 import type { StackFrame, VariableSlot } from '../engine';
+import { slotAddress } from '../engine';
+import type { RefHover } from './hover';
 import { Slot } from './Slot';
-import { displayValue, type DetailMode } from './stackView';
+import { displayValue, formatHex32, type DetailMode } from './stackView';
 
 interface FrameProps {
   frame: StackFrame;
@@ -12,6 +14,10 @@ interface FrameProps {
   ordinal: number;
   active: boolean;
   mode: DetailMode;
+  /** True while the frame's call site is hovered in the editor. */
+  linked?: boolean;
+  onFrameHover?: (frameId: number | null) => void;
+  onRefHover?: (ref: RefHover | null) => void;
 }
 
 export function Frame({
@@ -21,6 +27,9 @@ export function Frame({
   ordinal,
   active,
   mode,
+  linked = false,
+  onFrameHover,
+  onRefHover,
 }: FrameProps) {
   const style = {
     '--frame-hue': hue,
@@ -36,10 +45,12 @@ export function Frame({
 
   return (
     <article
-      className={`frame${active ? ' frame-active' : ''}`}
+      className={`frame${active ? ' frame-active' : ''}${linked ? ' frame-linked' : ''}`}
       style={style}
       aria-label={`${frame.functionName} frame`}
       aria-current={active || undefined}
+      onMouseEnter={() => onFrameHover?.(frame.id)}
+      onMouseLeave={() => onFrameHover?.(null)}
     >
       <header className="frame-header">
         <span className="frame-name">{frame.functionName}</span>
@@ -56,6 +67,7 @@ export function Frame({
               frame={frame}
               callerName={caller?.functionName ?? null}
               callerBase={caller?.base ?? null}
+              onRefHover={onRefHover}
             />
           ))}
         </div>
@@ -65,11 +77,28 @@ export function Frame({
             <span className="frame-chips-empty">no variables</span>
           )}
           {variables.map((slot) => {
-            const display = displayValue(frame.values[slot.name]);
+            const raw = frame.values[slot.name];
+            const display = displayValue(raw);
+            const refHover: RefHover | null =
+              raw?.kind === 'ref'
+                ? {
+                    fromAddress: slotAddress(frame.base, slot),
+                    toAddress: raw.address,
+                    dangling: raw.dangling,
+                  }
+                : null;
             return (
               <span
                 key={slot.name}
                 className={`chip chip-${display.kind}${display.dangling ? ' chip-dangling' : ''}`}
+                data-slot-addr={slotAddress(frame.base, slot)}
+                data-hex={
+                  raw?.kind === 'i32' ? formatHex32(raw.value) : undefined
+                }
+                onMouseEnter={
+                  refHover ? () => onRefHover?.(refHover) : undefined
+                }
+                onMouseLeave={refHover ? () => onRefHover?.(null) : undefined}
               >
                 {slot.name} = {display.text}
                 {display.dangling && (

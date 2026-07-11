@@ -9,6 +9,11 @@ export function formatAddress(address: number): string {
   return `0x${address.toString(16)}`;
 }
 
+/** Two's-complement hex of an i32, e.g. -1 → `0xffffffff`. */
+export function formatHex32(value: number): string {
+  return `0x${(value >>> 0).toString(16).padStart(8, '0')}`;
+}
+
 export function formatOffset(offset: number): string {
   const sign = offset < 0 ? '-' : '+';
   return `${sign}0x${Math.abs(offset).toString(16)}`;

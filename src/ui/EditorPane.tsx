@@ -8,7 +8,13 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { analyze, type Analysis } from '../lang';
 import { SEED_PROGRAM } from '../samples';
 import { toEditorDiagnostics } from './editorDiagnostics';
-import { currentStepLine, setCurrentStepLine } from './editorHighlight';
+import {
+  currentStepLine,
+  hoverRange,
+  setCurrentStepLine,
+  setHoverRange,
+  type HighlightRange,
+} from './editorHighlight';
 
 const STORAGE_KEY = 'stackviz:program';
 const DIAGNOSTIC_DEBOUNCE_MS = 300;
@@ -35,19 +41,27 @@ interface EditorPaneProps {
   onAnalysis?: (analysis: Analysis) => void;
   /** Document offset of what executes next; null hides the line marker. */
   currentOffset?: number | null;
+  /** Source range to highlight for the hovered frame or call; null clears it. */
+  highlightRange?: HighlightRange | null;
+  /** Fires with the document offset under the pointer; null off-text. */
+  onHoverOffset?: (offset: number | null) => void;
 }
 
 export function EditorPane({
   onAnalysis,
   currentOffset = null,
+  highlightRange = null,
+  onHoverOffset,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onAnalysisRef = useRef(onAnalysis);
+  const onHoverOffsetRef = useRef(onHoverOffset);
 
   useEffect(() => {
     onAnalysisRef.current = onAnalysis;
-  }, [onAnalysis]);
+    onHoverOffsetRef.current = onHoverOffset;
+  }, [onAnalysis, onHoverOffset]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -71,6 +85,19 @@ export function EditorPane({
       }
     });
 
+    const hoverEvents = EditorView.domEventHandlers({
+      mousemove: (event, view) => {
+        const offset = view.posAtCoords({
+          x: event.clientX,
+          y: event.clientY,
+        });
+        onHoverOffsetRef.current?.(offset);
+      },
+      mouseleave: () => {
+        onHoverOffsetRef.current?.(null);
+      },
+    });
+
     const view = new EditorView({
       parent: host,
       state: EditorState.create({
@@ -81,6 +108,8 @@ export function EditorPane({
           lintGutter(),
           stackvizLinter,
           currentStepLine,
+          hoverRange,
+          hoverEvents,
           persist,
           oneDark,
           EditorView.theme({ '&': { height: '100%' } }),
@@ -102,6 +131,12 @@ export function EditorPane({
       effects: setCurrentStepLine.of(currentOffset),
     });
   }, [currentOffset]);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: setHoverRange.of(highlightRange),
+    });
+  }, [highlightRange]);
 
   return (
     <section className="pane editor-pane" aria-label="Editor">
