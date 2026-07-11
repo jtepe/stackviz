@@ -306,6 +306,112 @@ body {
   overflow: hidden;
 }
 
+.frame {
+  animation: frame-push 150ms ease-out;
+}
+
+@keyframes frame-push {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* A just-popped frame, kept on screen briefly while it fades out. */
+.frame-ghost {
+  position: relative;
+  pointer-events: none;
+  animation: frame-pop 150ms ease-in forwards;
+}
+
+@keyframes frame-pop {
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* The return value riding out of the dying frame. */
+.rax-rideout {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.6rem;
+  z-index: 5;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  white-space: nowrap;
+  animation: rax-rideout 150ms ease-in forwards;
+}
+
+@keyframes rax-rideout {
+  to {
+    opacity: 0;
+    transform: translateY(-1.5rem);
+  }
+}
+
+/* Flash the slot that just received rax from a returned `let`-call. */
+.slot-landed,
+.chip-landed {
+  animation: value-land 400ms ease-out;
+}
+
+@keyframes value-land {
+  from {
+    background-color: rgb(137 180 250 / 0.45);
+  }
+}
+
+.overflow-marker {
+  border: 2px solid #f38ba8;
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #f38ba8;
+  animation: overflow-flash 1s step-end infinite;
+}
+
+@keyframes overflow-flash {
+  0%,
+  100% {
+    background: transparent;
+    color: #f38ba8;
+  }
+  50% {
+    background: #f38ba8;
+    color: var(--bg);
+  }
+}
+
+/* Static high-contrast overflow treatment instead of flashing. */
+.overflow-marker-static {
+  animation: none;
+  background: #f38ba8;
+  color: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame,
+  .frame-ghost,
+  .rax-rideout,
+  .slot-landed,
+  .chip-landed,
+  .overflow-marker {
+    animation: none;
+  }
+
+  .overflow-marker {
+    background: #f38ba8;
+    color: var(--bg);
+  }
+}
+
 .frame-active {
   box-shadow: 0 0 0 2px var(--frame-border);
 }
@@ -537,6 +643,12 @@ circle.ref-arrow-dangling {
 .editor-host .cm-hover-call {
   background: rgb(249 226 175 / 0.22);
   outline: 1px solid rgb(249 226 175 / 0.45);
+  border-radius: 2px;
+}
+
+.editor-host .cm-overflow-call {
+  background: rgb(243 139 168 / 0.25);
+  outline: 1px solid #f38ba8;
   border-radius: 2px;
 }
 

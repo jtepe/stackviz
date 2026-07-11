@@ -15,6 +15,8 @@ interface SlotProps {
   /** The frame below on the stack; null for the entry frame. */
   callerName: string | null;
   callerBase: number | null;
+  /** True when the slot just received rax from a returned `let`-call. */
+  landed?: boolean;
   onRefHover?: (ref: RefHover | null) => void;
 }
 
@@ -23,6 +25,7 @@ export function Slot({
   frame,
   callerName,
   callerBase,
+  landed = false,
   onRefHover,
 }: SlotProps) {
   const address = formatAddress(slotAddress(frame.base, slot));
@@ -88,7 +91,10 @@ export function Slot({
   }
 
   return (
-    <div className={`slot slot-${slot.kind}`} data-slot-addr={slotAddr}>
+    <div
+      className={`slot slot-${slot.kind}${landed ? ' slot-landed' : ''}`}
+      data-slot-addr={slotAddr}
+    >
       <span className="slot-address">{address}</span>
       <span className="slot-offset">{offset}</span>
       <span className="slot-size">{slot.size} B</span>

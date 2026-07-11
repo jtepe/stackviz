@@ -1,15 +1,17 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { StackPane } from '../../src/ui/StackPane';
 import { formatHex32 } from '../../src/ui/stackView';
 import type { RefHover } from '../../src/ui/hover';
-import { previewSnapshot } from './helpers';
+import { previewSnapshot, stubMatchMedia } from './helpers';
 import { analyze, type Analysis } from '../../src/lang';
 import {
   initExecution,
+  runToEnd,
   slotAddress,
   step,
   sysvAmd64,
   ENTRY_FRAME_BASE,
+  MAX_FRAMES,
   type ExecutionState,
 } from '../../src/engine';
 
@@ -355,6 +357,111 @@ describe('StackPane hex on hover', () => {
     renderPane(analysis, state);
     const outer = screen.getByRole('article', { name: 'outer frame' });
     expect(within(outer).getByText('??')).not.toHaveAttribute('data-hex');
+  });
+});
+
+const OVERFLOW_PROGRAM = `fn rec(n: i32) {
+    rec(n);
+}
+
+fn main() {
+    rec(1);
+}
+`;
+
+function steppedTo(
+  source: string,
+  kind: string,
+): [Analysis, ExecutionState, ExecutionState] {
+  const analysis = analyzed(source);
+  let prev = initExecution(analysis.checked, sysvAmd64);
+  let next = step(prev);
+  while (next.lastStep?.kind !== kind) {
+    prev = next;
+    next = step(prev);
+  }
+  return [analysis, prev, next];
+}
+
+describe('StackPane pop choreography', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps a ghost of the popped frame with the value riding out in rax', () => {
+    vi.useFakeTimers();
+    const [analysis, prev, next] = steppedTo(PROGRAM, 'pop');
+    const { rerender } = renderPane(analysis, prev);
+    rerender(<StackPane analysis={analysis} state={next} />);
+    const ghost = screen.getByTestId('pop-ghost');
+    expect(
+      within(ghost).getByRole('article', {
+        name: 'helper frame',
+        hidden: true,
+      }),
+    ).toBeInTheDocument();
+    expect(within(ghost).getByText('rax = 42')).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.queryByTestId('pop-ghost')).not.toBeInTheDocument();
+  });
+
+  it('skips the ghost entirely under reduced motion', () => {
+    stubMatchMedia(true);
+    vi.useFakeTimers();
+    const [analysis, prev, next] = steppedTo(PROGRAM, 'pop');
+    const { rerender } = renderPane(analysis, prev);
+    rerender(<StackPane analysis={analysis} state={next} />);
+    expect(screen.queryByTestId('pop-ghost')).not.toBeInTheDocument();
+  });
+
+  it('flashes the slot that just received rax after a let-call', () => {
+    const [analysis, , next] = steppedTo(PROGRAM, 'write-rax');
+    const { container } = renderPane(analysis, next);
+    const landed = container.querySelector('.slot-landed');
+    expect(landed).not.toBeNull();
+    expect(landed!.textContent).toContain('r: i32');
+    fireEvent.click(screen.getByRole('button', { name: 'logical' }));
+    const chip = container.querySelector('.chip-landed');
+    expect(chip).not.toBeNull();
+    expect(chip!.textContent).toContain('r = 42');
+  });
+});
+
+describe('StackPane stack overflow', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function overflowed(): [Analysis, ExecutionState] {
+    const analysis = analyzed(OVERFLOW_PROGRAM);
+    const state = runToEnd(initExecution(analysis.checked, sysvAmd64));
+    expect(state.status).toBe('overflow');
+    return [analysis, state];
+  }
+
+  it('keeps the live frames rendered with a marker where the next would go', () => {
+    const [analysis, state] = overflowed();
+    renderPane(analysis, state);
+    expect(screen.getAllByRole('article')).toHaveLength(MAX_FRAMES);
+    const marker = screen.getByRole('alert');
+    expect(marker).toHaveTextContent('☠ stack overflow');
+    const body = marker.parentElement!;
+    const frames = body.querySelectorAll('article.frame');
+    expect(
+      frames[frames.length - 1].compareDocumentPosition(marker) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(marker.className).not.toContain('overflow-marker-static');
+  });
+
+  it('renders a static high-contrast marker under reduced motion', () => {
+    stubMatchMedia(true);
+    const [analysis, state] = overflowed();
+    renderPane(analysis, state);
+    expect(screen.getByRole('alert').className).toContain(
+      'overflow-marker-static',
+    );
   });
 });
 

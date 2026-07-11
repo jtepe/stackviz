@@ -5,6 +5,8 @@ import { STACK_BASE } from '../engine';
 import { Frame } from './Frame';
 import { RefArrowOverlay } from './RefArrowOverlay';
 import type { RefHover } from './hover';
+import { usePrefersReducedMotion } from './motion';
+import { usePopGhost } from './transitions';
 import {
   activationOrdinal,
   displayRax,
@@ -47,6 +49,8 @@ export function StackPane({
   const bodyRef = useCallback((node: HTMLDivElement | null) => {
     setBody(node);
   }, []);
+  const reducedMotion = usePrefersReducedMotion();
+  const popGhost = usePopGhost(state);
 
   if (state === null) {
     return (
@@ -62,6 +66,9 @@ export function StackPane({
   const hues = frameHues(state);
   const rax = displayRax(state.rax);
   const rawRax = state.rax;
+  const landedSlot =
+    state.lastStep?.kind === 'write-rax' ? state.lastStep.name : null;
+  const ghostRax = popGhost ? displayRax(popGhost.rax) : null;
 
   return (
     <section className="pane stack-pane" aria-label="Stack">
@@ -100,7 +107,7 @@ export function StackPane({
       </div>
       <div className="pane-body stack-body" ref={bodyRef}>
         <div className="stack-base-label">{formatAddress(STACK_BASE)}</div>
-        {state.frames.length === 0 ? (
+        {state.frames.length === 0 && popGhost === null ? (
           <div className="stack-empty">
             {state.status === 'ready'
               ? 'Ready — step to enter main.'
@@ -117,10 +124,36 @@ export function StackPane({
               active={index === state.frames.length - 1}
               mode={mode}
               linked={frame.id === linkedFrameId}
+              landedSlot={index === state.frames.length - 1 ? landedSlot : null}
               onFrameHover={onFrameHover}
               onRefHover={onRefHover}
             />
           ))
+        )}
+        {popGhost && (
+          <div className="frame-ghost" data-testid="pop-ghost" aria-hidden>
+            <Frame
+              frame={popGhost.frame}
+              caller={popGhost.caller}
+              hue={popGhost.hue}
+              ordinal={popGhost.ordinal}
+              active={false}
+              mode={mode}
+            />
+            {ghostRax && ghostRax.kind !== 'clobbered' && (
+              <span className="rax-rideout">rax = {ghostRax.text}</span>
+            )}
+          </div>
+        )}
+        {state.status === 'overflow' && (
+          <div
+            role="alert"
+            className={`overflow-marker${
+              reducedMotion ? ' overflow-marker-static' : ''
+            }`}
+          >
+            ☠ stack overflow
+          </div>
         )}
         {refHover?.dangling && (
           <div className="ghost-target" data-ghost-target>

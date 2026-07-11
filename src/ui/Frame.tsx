@@ -16,6 +16,8 @@ interface FrameProps {
   mode: DetailMode;
   /** True while the frame's call site is hovered in the editor. */
   linked?: boolean;
+  /** Variable that just received rax after a `let`-call returned. */
+  landedSlot?: string | null;
   onFrameHover?: (frameId: number | null) => void;
   onRefHover?: (ref: RefHover | null) => void;
 }
@@ -28,6 +30,7 @@ export function Frame({
   active,
   mode,
   linked = false,
+  landedSlot = null,
   onFrameHover,
   onRefHover,
 }: FrameProps) {
@@ -67,6 +70,10 @@ export function Frame({
               frame={frame}
               callerName={caller?.functionName ?? null}
               callerBase={caller?.base ?? null}
+              landed={
+                (slot.kind === 'arg' || slot.kind === 'local') &&
+                slot.name === landedSlot
+              }
               onRefHover={onRefHover}
             />
           ))}
@@ -90,7 +97,7 @@ export function Frame({
             return (
               <span
                 key={slot.name}
-                className={`chip chip-${display.kind}${display.dangling ? ' chip-dangling' : ''}`}
+                className={`chip chip-${display.kind}${display.dangling ? ' chip-dangling' : ''}${slot.name === landedSlot ? ' chip-landed' : ''}`}
                 data-slot-addr={slotAddress(frame.base, slot)}
                 data-hex={
                   raw?.kind === 'i32' ? formatHex32(raw.value) : undefined

@@ -95,6 +95,13 @@ export function App() {
     return toRange(hover.callSpan);
   }, [frames, hover.frameId, hover.callSpan]);
 
+  const execution = state.execution;
+  const overflowSite = useMemo(
+    () =>
+      execution?.status === 'overflow' ? toRange(execution.overflowSite) : null,
+    [execution],
+  );
+
   const linkedFrameId = useMemo(
     () =>
       frames && hover.callSpan
@@ -115,6 +122,7 @@ export function App() {
             onAnalysis={handleAnalysis}
             currentOffset={currentOffset}
             highlightRange={highlightRange}
+            overflowSite={overflowSite}
             onHoverOffset={handleHoverOffset}
           />
         }
