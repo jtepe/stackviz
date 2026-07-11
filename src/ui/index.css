@@ -127,6 +127,46 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.editor-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.editor-actions select,
+.editor-actions button {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+.editor-actions select:hover,
+.editor-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.share-notice {
+  font-size: 0.75rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
 .pane-body {
   flex: 1 1 auto;
   min-height: 0;
