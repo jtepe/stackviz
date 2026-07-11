@@ -47,7 +47,10 @@ function analyzed(source: string): Analysis {
 
 function preview(source: string): [Analysis, ExecutionState] {
   const analysis = analyzed(source);
-  return [analysis, previewSnapshot(initExecution(analysis.checked, sysvAmd64))];
+  return [
+    analysis,
+    previewSnapshot(initExecution(analysis.checked, sysvAmd64)),
+  ];
 }
 
 function renderPane(analysis: Analysis, state: ExecutionState) {

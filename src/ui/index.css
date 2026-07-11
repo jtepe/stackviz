@@ -209,9 +209,7 @@ body {
 
 /* Frames: hue is per function, shade shifts per recursive activation. */
 .frame {
-  --frame-border: hsl(
-    var(--frame-hue) 55% calc(48% - var(--frame-shade) * 8%)
-  );
+  --frame-border: hsl(var(--frame-hue) 55% calc(48% - var(--frame-shade) * 8%));
   --frame-bg: hsl(var(--frame-hue) 28% calc(15% + var(--frame-shade) * 4%));
   border: 1px solid var(--frame-border);
   border-radius: 6px;

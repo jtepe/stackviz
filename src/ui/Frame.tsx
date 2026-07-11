@@ -14,7 +14,14 @@ interface FrameProps {
   mode: DetailMode;
 }
 
-export function Frame({ frame, caller, hue, ordinal, active, mode }: FrameProps) {
+export function Frame({
+  frame,
+  caller,
+  hue,
+  ordinal,
+  active,
+  mode,
+}: FrameProps) {
   const style = {
     '--frame-hue': hue,
     '--frame-shade': ordinal,

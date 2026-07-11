@@ -38,7 +38,8 @@ export function Slot({ slot, frame, callerName, callerBase }: SlotProps) {
       break;
     case 'saved-rbp':
       label = 'saved rbp';
-      value = callerBase === null ? RUNTIME_BOUNDARY : formatAddress(callerBase);
+      value =
+        callerBase === null ? RUNTIME_BOUNDARY : formatAddress(callerBase);
       break;
     case 'arg':
     case 'local': {
