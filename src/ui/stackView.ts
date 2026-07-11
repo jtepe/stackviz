@@ -2,13 +2,7 @@
 // coloring, and the preview snapshot the app renders until step controls
 // exist. Everything here is a pure function of engine state.
 
-import {
-  ExecutionState,
-  RaxValue,
-  StackFrame,
-  Value,
-  step,
-} from '../engine';
+import { ExecutionState, RaxValue, StackFrame, Value, step } from '../engine';
 
 export type DetailMode = 'bytes' | 'logical';
 
