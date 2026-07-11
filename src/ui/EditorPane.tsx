@@ -8,6 +8,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { analyze, type Analysis } from '../lang';
 import { SEED_PROGRAM } from '../samples';
 import { toEditorDiagnostics } from './editorDiagnostics';
+import { currentStepLine, setCurrentStepLine } from './editorHighlight';
 
 const STORAGE_KEY = 'stackviz:program';
 const DIAGNOSTIC_DEBOUNCE_MS = 300;
@@ -32,10 +33,16 @@ function saveProgram(source: string): void {
 
 interface EditorPaneProps {
   onAnalysis?: (analysis: Analysis) => void;
+  /** Document offset of what executes next; null hides the line marker. */
+  currentOffset?: number | null;
 }
 
-export function EditorPane({ onAnalysis }: EditorPaneProps) {
+export function EditorPane({
+  onAnalysis,
+  currentOffset = null,
+}: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
   const onAnalysisRef = useRef(onAnalysis);
 
   useEffect(() => {
@@ -73,6 +80,7 @@ export function EditorPane({ onAnalysis }: EditorPaneProps) {
           rust(),
           lintGutter(),
           stackvizLinter,
+          currentStepLine,
           persist,
           oneDark,
           EditorView.theme({ '&': { height: '100%' } }),
@@ -80,10 +88,20 @@ export function EditorPane({ onAnalysis }: EditorPaneProps) {
       }),
     });
 
+    viewRef.current = view;
     onAnalysisRef.current?.(analyze(initial));
 
-    return () => view.destroy();
+    return () => {
+      viewRef.current = null;
+      view.destroy();
+    };
   }, []);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: setCurrentStepLine.of(currentOffset),
+    });
+  }, [currentOffset]);
 
   return (
     <section className="pane editor-pane" aria-label="Editor">

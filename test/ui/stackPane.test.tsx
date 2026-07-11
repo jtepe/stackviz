@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { StackPane } from '../../src/ui/StackPane';
-import { previewSnapshot } from '../../src/ui/stackView';
+import { previewSnapshot } from './helpers';
 import { analyze, type Analysis } from '../../src/lang';
 import {
   initExecution,

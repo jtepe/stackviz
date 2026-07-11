@@ -142,6 +142,94 @@ body {
   font-size: 0.9rem;
 }
 
+/* Execution controls */
+.run-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.run-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border);
+}
+
+.exec-toolbar {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.exec-toolbar button {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+.exec-toolbar button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.exec-toolbar button:disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.status-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.status-badge-ready {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.status-badge-running {
+  color: #a6e3a1;
+  border-color: #a6e3a1;
+}
+
+.status-badge-finished {
+  color: #cba6f7;
+  border-color: #cba6f7;
+}
+
+.status-badge-overflow {
+  color: #f38ba8;
+  border-color: #f38ba8;
+}
+
+.run-notice {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--bg);
+  background: #f9e2af;
+  border-bottom: 1px solid var(--border);
+}
+
 /* Stack panel */
 .stack-toolbar {
   flex: 0 0 auto;
@@ -348,6 +436,11 @@ body {
 
 .editor-host .cm-editor {
   height: 100%;
+}
+
+.editor-host .cm-step-line {
+  background: rgb(137 180 250 / 0.16);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .editor-host .cm-scroller {
