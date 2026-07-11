@@ -11,8 +11,10 @@ import { toEditorDiagnostics } from './editorDiagnostics';
 import {
   currentStepLine,
   hoverRange,
+  overflowRange,
   setCurrentStepLine,
   setHoverRange,
+  setOverflowRange,
   type HighlightRange,
 } from './editorHighlight';
 
@@ -43,6 +45,8 @@ interface EditorPaneProps {
   currentOffset?: number | null;
   /** Source range to highlight for the hovered frame or call; null clears it. */
   highlightRange?: HighlightRange | null;
+  /** Call site that overflowed the stack; null clears the highlight. */
+  overflowSite?: HighlightRange | null;
   /** Fires with the document offset under the pointer; null off-text. */
   onHoverOffset?: (offset: number | null) => void;
 }
@@ -51,6 +55,7 @@ export function EditorPane({
   onAnalysis,
   currentOffset = null,
   highlightRange = null,
+  overflowSite = null,
   onHoverOffset,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -109,6 +114,7 @@ export function EditorPane({
           stackvizLinter,
           currentStepLine,
           hoverRange,
+          overflowRange,
           hoverEvents,
           persist,
           oneDark,
@@ -137,6 +143,12 @@ export function EditorPane({
       effects: setHoverRange.of(highlightRange),
     });
   }, [highlightRange]);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: setOverflowRange.of(overflowSite),
+    });
+  }, [overflowSite]);
 
   return (
     <section className="pane editor-pane" aria-label="Editor">

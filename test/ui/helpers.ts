@@ -1,4 +1,34 @@
+import { vi } from 'vitest';
 import { type ExecutionState, step } from '../../src/engine';
+
+export interface MatchMediaStub {
+  set: (matches: boolean) => void;
+}
+
+/**
+ * Replace window.matchMedia with a controllable stub; call `set` to flip
+ * the match and notify change listeners. Undo with vi.unstubAllGlobals().
+ */
+export function stubMatchMedia(matches: boolean): MatchMediaStub {
+  const listeners = new Set<() => void>();
+  const query = {
+    matches,
+    media: '(prefers-reduced-motion: reduce)',
+    addEventListener: (_type: string, listener: () => void) => {
+      listeners.add(listener);
+    },
+    removeEventListener: (_type: string, listener: () => void) => {
+      listeners.delete(listener);
+    },
+  };
+  vi.stubGlobal('matchMedia', vi.fn().mockReturnValue(query));
+  return {
+    set(next: boolean) {
+      query.matches = next;
+      listeners.forEach((listener) => listener());
+    },
+  };
+}
 
 /**
  * Run execution to its deepest first moment — right before the first frame
