@@ -1,8 +1,7 @@
-// View-model helpers for the stack panel: value/address formatting, frame
-// coloring, and the preview snapshot the app renders until step controls
-// exist. Everything here is a pure function of engine state.
+// View-model helpers for the stack panel: value/address formatting and
+// frame coloring. Everything here is a pure function of engine state.
 
-import { ExecutionState, RaxValue, StackFrame, Value, step } from '../engine';
+import { ExecutionState, RaxValue, StackFrame, Value } from '../engine';
 
 export type DetailMode = 'bytes' | 'logical';
 
@@ -71,19 +70,4 @@ export function activationOrdinal(
     if (frames[i].functionName === frames[index].functionName) ordinal++;
   }
   return ordinal;
-}
-
-/**
- * The snapshot the app shows before interactive stepping lands: execution
- * paused at its deepest first moment — right before the first frame pops —
- * or the terminal state if the run overflows first.
- */
-export function previewSnapshot(initial: ExecutionState): ExecutionState {
-  let current = initial;
-  for (;;) {
-    const next = step(current);
-    if (next.lastStep?.kind === 'pop') return current;
-    if (next.status === 'finished' || next.status === 'overflow') return next;
-    current = next;
-  }
 }

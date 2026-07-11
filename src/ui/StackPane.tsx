@@ -71,7 +71,11 @@ export function StackPane({ analysis, state }: StackPaneProps) {
       <div className="pane-body stack-body">
         <div className="stack-base-label">{formatAddress(STACK_BASE)}</div>
         {state.frames.length === 0 ? (
-          <div className="stack-empty">Program finished — stack is empty.</div>
+          <div className="stack-empty">
+            {state.status === 'ready'
+              ? 'Ready — step to enter main.'
+              : 'Program finished — stack is empty.'}
+          </div>
         ) : (
           state.frames.map((frame, index) => (
             <Frame
