@@ -14,4 +14,15 @@ describe('App shell', () => {
     expect(divider).toHaveAttribute('aria-orientation', 'vertical');
     expect(divider).toHaveAttribute('tabindex', '0');
   });
+
+  it('renders the seed program as real stack frames', () => {
+    render(<App />);
+    expect(
+      screen.getByRole('article', { name: 'main frame' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('article', { name: 'helper frame' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('0x7fffffffe000')).toBeInTheDocument();
+  });
 });
