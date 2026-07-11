@@ -278,6 +278,7 @@ body {
 }
 
 .stack-body {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -307,6 +308,15 @@ body {
 
 .frame-active {
   box-shadow: 0 0 0 2px var(--frame-border);
+}
+
+.frame:hover {
+  filter: brightness(1.08);
+}
+
+.frame-linked {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .frame-header {
@@ -397,6 +407,87 @@ body {
   font-style: italic;
 }
 
+/* Hex tooltip: any element carrying data-hex reveals it on hover. */
+[data-hex] {
+  position: relative;
+  cursor: help;
+}
+
+[data-hex]:hover::after {
+  content: attr(data-hex);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 4px);
+  z-index: 10;
+  background: var(--bg-header);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  color: var(--text);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.value-ref {
+  cursor: crosshair;
+}
+
+/* Reference arrows: pointer-transparent SVG pinned over the stack body. */
+.ref-arrow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.ref-arrow {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.ref-arrow-live {
+  stroke: var(--accent);
+}
+
+.ref-arrow-dangling {
+  stroke: #f38ba8;
+  stroke-dasharray: 4 3;
+}
+
+circle.ref-arrow-live {
+  fill: var(--accent);
+}
+
+circle.ref-arrow-dangling {
+  fill: #f38ba8;
+}
+
+.ref-arrow-head-live {
+  fill: var(--accent);
+}
+
+.ref-arrow-head-dangling {
+  fill: #f38ba8;
+}
+
+/* Where a dangling reference's popped target frame used to live. */
+.ghost-target {
+  border: 1px dashed #f38ba8;
+  border-radius: 6px;
+  color: #f38ba8;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 5px,
+    rgb(243 139 168 / 0.08) 5px,
+    rgb(243 139 168 / 0.08) 10px
+  );
+}
+
 .dangling-badge {
   margin-left: 0.4rem;
   font-size: 0.65rem;
@@ -441,6 +532,12 @@ body {
 .editor-host .cm-step-line {
   background: rgb(137 180 250 / 0.16);
   box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.editor-host .cm-hover-call {
+  background: rgb(249 226 175 / 0.22);
+  outline: 1px solid rgb(249 226 175 / 0.45);
+  border-radius: 2px;
 }
 
 .editor-host .cm-scroller {

@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { StackPane } from '../../src/ui/StackPane';
+import { formatHex32 } from '../../src/ui/stackView';
+import type { RefHover } from '../../src/ui/hover';
 import { previewSnapshot } from './helpers';
 import { analyze, type Analysis } from '../../src/lang';
 import {
@@ -194,6 +196,165 @@ describe('StackPane detail toggle', () => {
     fireEvent.click(screen.getByRole('button', { name: 'bytes' }));
     const outer = screen.getByRole('article', { name: 'outer frame' });
     expect(within(outer).getByText('saved rbp')).toBeInTheDocument();
+  });
+});
+
+describe('StackPane hover linking', () => {
+  it('reports frame hovers with the frame id', () => {
+    const [analysis, state] = preview(PROGRAM);
+    const hovered: (number | null)[] = [];
+    render(
+      <StackPane
+        analysis={analysis}
+        state={state}
+        onFrameHover={(id) => hovered.push(id)}
+      />,
+    );
+    const helper = screen.getByRole('article', { name: 'helper frame' });
+    fireEvent.mouseEnter(helper);
+    fireEvent.mouseLeave(helper);
+    expect(hovered).toEqual([state.frames[2].id, null]);
+  });
+
+  it('marks the frame linked to the hovered call site', () => {
+    const [analysis, state] = preview(PROGRAM);
+    render(
+      <StackPane
+        analysis={analysis}
+        state={state}
+        linkedFrameId={state.frames[1].id}
+      />,
+    );
+    const outer = screen.getByRole('article', { name: 'outer frame' });
+    expect(outer.className).toContain('frame-linked');
+    const main = screen.getByRole('article', { name: 'main frame' });
+    expect(main.className).not.toContain('frame-linked');
+  });
+
+  it('reports ref hovers with source and pointee addresses', () => {
+    const [analysis, state] = preview(PROGRAM);
+    const hovered: (RefHover | null)[] = [];
+    render(
+      <StackPane
+        analysis={analysis}
+        state={state}
+        onRefHover={(ref) => hovered.push(ref)}
+      />,
+    );
+    const outerFrame = state.frames[1];
+    const pxSlot = outerFrame.layout.slots.find(
+      (s) => s.kind === 'local' && s.name === 'px',
+    )!;
+    const xSlot = outerFrame.layout.slots.find(
+      (s) => s.kind === 'local' && s.name === 'x',
+    )!;
+    const outer = screen.getByRole('article', { name: 'outer frame' });
+    const refText = `0x${slotAddress(outerFrame.base, xSlot).toString(16)} → outer::x`;
+    const refValue = within(outer).getAllByText(refText)[0];
+    fireEvent.mouseEnter(refValue);
+    fireEvent.mouseLeave(refValue);
+    expect(hovered).toEqual([
+      {
+        fromAddress: slotAddress(outerFrame.base, pxSlot),
+        toAddress: slotAddress(outerFrame.base, xSlot),
+        dangling: false,
+      },
+      null,
+    ]);
+  });
+
+  it('tags variable rows with their address for the arrow overlay', () => {
+    const [analysis, state] = preview(PROGRAM);
+    const { container } = renderPane(analysis, state);
+    const outerFrame = state.frames[1];
+    const xSlot = outerFrame.layout.slots.find(
+      (s) => s.kind === 'local' && s.name === 'x',
+    )!;
+    const address = slotAddress(outerFrame.base, xSlot);
+    expect(
+      container.querySelector(`[data-slot-addr="${address}"]`),
+    ).not.toBeNull();
+  });
+
+  it('draws the arrow overlay while a live ref is hovered', () => {
+    const [analysis, state] = preview(PROGRAM);
+    const outerFrame = state.frames[1];
+    const pxSlot = outerFrame.layout.slots.find(
+      (s) => s.kind === 'local' && s.name === 'px',
+    )!;
+    const xSlot = outerFrame.layout.slots.find(
+      (s) => s.kind === 'local' && s.name === 'x',
+    )!;
+    render(
+      <StackPane
+        analysis={analysis}
+        state={state}
+        refHover={{
+          fromAddress: slotAddress(outerFrame.base, pxSlot),
+          toAddress: slotAddress(outerFrame.base, xSlot),
+          dangling: false,
+        }}
+      />,
+    );
+    expect(screen.getByTestId('ref-arrow')).toBeInTheDocument();
+    expect(screen.queryByText(/popped frame/)).not.toBeInTheDocument();
+  });
+
+  it('renders a ghost target for a hovered dangling ref', () => {
+    const analysis = analyzed(DANGLE_PROGRAM);
+    let state = initExecution(analysis.checked, sysvAmd64);
+    while (state.lastStep?.kind !== 'write-rax') {
+      state = step(state);
+    }
+    const mainFrame = state.frames[0];
+    const pSlot = mainFrame.layout.slots.find(
+      (s) => s.kind === 'local' && s.name === 'p',
+    )!;
+    const p = mainFrame.values['p'];
+    expect(p.kind).toBe('ref');
+    render(
+      <StackPane
+        analysis={analysis}
+        state={state}
+        refHover={{
+          fromAddress: slotAddress(mainFrame.base, pSlot),
+          toAddress: p.kind === 'ref' ? p.address : 0,
+          dangling: true,
+        }}
+      />,
+    );
+    const ghost = screen.getByText(/popped frame/);
+    expect(ghost).toHaveAttribute('data-ghost-target');
+    expect(screen.getByTestId('ref-arrow')).toBeInTheDocument();
+  });
+});
+
+describe('StackPane hex on hover', () => {
+  it('annotates i32 values with their hex form', () => {
+    const [analysis, state] = preview(PROGRAM);
+    renderPane(analysis, state);
+    const outer = screen.getByRole('article', { name: 'outer frame' });
+    expect(within(outer).getByText('42')).toHaveAttribute(
+      'data-hex',
+      '0x0000002a',
+    );
+  });
+
+  it("annotates logical-mode chips and negative values in two's complement", () => {
+    expect(formatHex32(-1)).toBe('0xffffffff');
+    const [analysis, state] = preview(PROGRAM);
+    const { container } = renderPane(analysis, state);
+    fireEvent.click(screen.getByRole('button', { name: 'logical' }));
+    const chip = container.querySelector('.chip[data-hex="0x0000002a"]');
+    expect(chip).not.toBeNull();
+    expect(chip!.textContent).toContain('x = 42');
+  });
+
+  it('leaves refs and uninitialized values without hex annotations', () => {
+    const [analysis, state] = preview(PROGRAM);
+    renderPane(analysis, state);
+    const outer = screen.getByRole('article', { name: 'outer frame' });
+    expect(within(outer).getByText('??')).not.toHaveAttribute('data-hex');
   });
 });
 
