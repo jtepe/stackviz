@@ -12,7 +12,9 @@ export function StatusBadge({ status }: { status: AppStatus }) {
   return (
     <span
       className={`status-badge status-badge-${status}`}
-      aria-label="Execution status"
+      role="status"
+      aria-live="polite"
+      aria-label={`Execution status: ${LABELS[status]}`}
     >
       {LABELS[status]}
     </span>

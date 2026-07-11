@@ -446,6 +446,10 @@ body {
     animation: none;
   }
 
+  .split-divider {
+    transition: none;
+  }
+
   .overflow-marker {
     background: #f38ba8;
     color: var(--bg);

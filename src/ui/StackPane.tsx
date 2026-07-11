@@ -90,7 +90,10 @@ export function StackPane({
             logical
           </button>
         </div>
-        <span className="rax-chip" aria-label="rax register">
+        <span
+          className="rax-chip"
+          aria-label={`rax register: ${rax.text}${rax.dangling ? ', dangling' : ''}`}
+        >
           rax
           <span
             className={`value value-${rax.kind}`}

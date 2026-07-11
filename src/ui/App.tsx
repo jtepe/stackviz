@@ -116,43 +116,46 @@ export function App() {
         <h1 className="app-title">StackViz</h1>
         <span className="app-subtitle">Interactive Call Stack Visualizer</span>
       </header>
-      <SplitPane
-        left={
-          <EditorPane
-            onAnalysis={handleAnalysis}
-            currentOffset={currentOffset}
-            highlightRange={highlightRange}
-            overflowSite={overflowSite}
-            onHoverOffset={handleHoverOffset}
-          />
-        }
-        right={
-          <div className="run-pane">
-            <div className="run-toolbar">
-              <Toolbar
-                controls={availableControls(state)}
-                onCommand={handleCommand}
-              />
-              <StatusBadge status={appStatus(state)} />
-            </div>
-            {state.resetNotice > 0 && (
-              <div className="run-notice" role="status">
-                Program changed — execution reset.
-              </div>
-            )}
-            <StackPane
-              analysis={state.analysis}
-              state={state.execution}
-              linkedFrameId={linkedFrameId}
-              refHover={hover.ref}
-              onFrameHover={handleFrameHover}
-              onRefHover={handleRefHover}
+      <main className="app-main">
+        <SplitPane
+          label="Resize editor and stack panels"
+          left={
+            <EditorPane
+              onAnalysis={handleAnalysis}
+              currentOffset={currentOffset}
+              highlightRange={highlightRange}
+              overflowSite={overflowSite}
+              onHoverOffset={handleHoverOffset}
             />
-          </div>
-        }
-        initialLeftFraction={0.5}
-        minFraction={0.2}
-      />
+          }
+          right={
+            <div className="run-pane">
+              <div className="run-toolbar">
+                <Toolbar
+                  controls={availableControls(state)}
+                  onCommand={handleCommand}
+                />
+                <StatusBadge status={appStatus(state)} />
+              </div>
+              {state.resetNotice > 0 && (
+                <div className="run-notice" role="status">
+                  Program changed — execution reset.
+                </div>
+              )}
+              <StackPane
+                analysis={state.analysis}
+                state={state.execution}
+                linkedFrameId={linkedFrameId}
+                refHover={hover.ref}
+                onFrameHover={handleFrameHover}
+                onRefHover={handleRefHover}
+              />
+            </div>
+          }
+          initialLeftFraction={0.5}
+          minFraction={0.2}
+        />
+      </main>
     </div>
   );
 }
