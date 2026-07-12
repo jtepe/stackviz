@@ -21,10 +21,17 @@ describe('keymap profile registry', () => {
     expect(resolveKeymapProfile('emacs')).toBeNull();
   });
 
-  it('lists the default profile as its only entry', () => {
+  it('lists the default and helix profiles', () => {
     expect(KEYMAP_PROFILES.map((p) => p.id)).toEqual([
       DEFAULT_KEYMAP_PROFILE_ID,
+      'helix',
     ]);
+  });
+
+  it('resolves the helix profile by id', () => {
+    const profile = resolveKeymapProfile('helix');
+    expect(profile).not.toBeNull();
+    expect(profile?.name).toBe('Helix');
   });
 
   it('produces keybindings for the default profile', () => {
@@ -63,6 +70,27 @@ describe('runtime keymap slot reconfigure', () => {
       expect(after).not.toBeNull();
       expect(after).not.toBe(before);
       expect(view.state.facet(keymap).flat().length).toBeGreaterThan(0);
+    } finally {
+      view.destroy();
+    }
+  });
+
+  it('switches to helix and back to default', () => {
+    const view = createView();
+    try {
+      expect(view.dom.querySelector('.cm-hx-status-panel')).toBeNull();
+
+      expect(setKeymapProfile(view, 'helix')).toBe(true);
+      expect(view.dom.querySelector('.cm-hx-status-panel')).not.toBeNull();
+
+      expect(setKeymapProfile(view, DEFAULT_KEYMAP_PROFILE_ID)).toBe(true);
+      expect(view.dom.querySelector('.cm-hx-status-panel')).toBeNull();
+      expect(
+        view.state
+          .facet(keymap)
+          .flat()
+          .some((b) => b.key === 'Mod-z'),
+      ).toBe(true);
     } finally {
       view.destroy();
     }

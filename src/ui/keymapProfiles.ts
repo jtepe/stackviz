@@ -8,6 +8,7 @@ import { defaultKeymap, historyKeymap } from '@codemirror/commands';
 import { foldKeymap } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { lintKeymap } from '@codemirror/lint';
+import { helix } from 'codemirror-helix';
 
 export interface KeymapProfile {
   id: string;
@@ -33,6 +34,12 @@ export const KEYMAP_PROFILES: readonly KeymapProfile[] = [
         ...completionKeymap,
         ...lintKeymap,
       ]),
+  },
+  {
+    id: 'helix',
+    name: 'Helix',
+    // drawSelection is disabled because baseEditorSetup already provides it.
+    extension: () => helix({ drawSelection: false }),
   },
 ];
 
