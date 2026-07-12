@@ -85,6 +85,17 @@ npm run lint           # Check code style (ESLint)
 npm run format         # Apply formatting (Prettier)
 ```
 
+## Releases
+
+Tagged releases are published automatically on GitHub. Pushing a `v*` tag (e.g. `v1.0.0`) triggers the [release workflow](.github/workflows/release.yml), which builds the app, auto-generates release notes from the commit history, and attaches a zip of the built `dist/` output as a downloadable asset.
+
+Grab the latest build from the [Releases page](../../releases), or cut a new one:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
 ## Project Structure
 
 - `src/lang/` — Tokenizer, parser, AST, type checker, diagnostics
