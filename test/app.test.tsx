@@ -106,6 +106,21 @@ describe('samples and sharing', () => {
     expect(editorText()).toContain('stored_program');
   });
 
+  it('switches keybindings to Helix and back via the dropdown', () => {
+    render(<App />);
+    const dropdown = screen.getByLabelText('Keybindings');
+    expect(dropdown).toHaveValue('default');
+    expect(document.querySelector('.cm-hx-status-panel')).toBeNull();
+
+    fireEvent.change(dropdown, { target: { value: 'helix' } });
+    expect(dropdown).toHaveValue('helix');
+    expect(document.querySelector('.cm-hx-status-panel')).not.toBeNull();
+
+    fireEvent.change(dropdown, { target: { value: 'default' } });
+    expect(dropdown).toHaveValue('default');
+    expect(document.querySelector('.cm-hx-status-panel')).toBeNull();
+  });
+
   it('share encodes the program into the URL and copies the link', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {

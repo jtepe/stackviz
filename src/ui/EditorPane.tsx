@@ -10,7 +10,9 @@ import { toEditorDiagnostics } from './editorDiagnostics';
 import { baseEditorSetup } from './editorSetup';
 import {
   DEFAULT_KEYMAP_PROFILE_ID,
+  KEYMAP_PROFILES,
   keymapProfileExtension,
+  setKeymapProfile,
 } from './keymapProfiles';
 import {
   decodeProgramFromHash,
@@ -87,6 +89,9 @@ export function EditorPane({
   const onAnalysisRef = useRef(onAnalysis);
   const onHoverOffsetRef = useRef(onHoverOffset);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [keymapProfileId, setKeymapProfileId] = useState(
+    DEFAULT_KEYMAP_PROFILE_ID,
+  );
 
   useEffect(() => {
     onAnalysisRef.current = onAnalysis;
@@ -203,6 +208,15 @@ export function EditorPane({
     });
   };
 
+  const handleKeymapProfileChange = (id: string) => {
+    const view = viewRef.current;
+    if (!view) return;
+    if (setKeymapProfile(view, id)) {
+      setKeymapProfileId(id);
+      view.focus();
+    }
+  };
+
   const handleShare = async () => {
     const view = viewRef.current;
     if (!view) return;
@@ -226,6 +240,17 @@ export function EditorPane({
               {shareNotice}
             </span>
           )}
+          <select
+            aria-label="Keybindings"
+            value={keymapProfileId}
+            onChange={(event) => handleKeymapProfileChange(event.target.value)}
+          >
+            {KEYMAP_PROFILES.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+              </option>
+            ))}
+          </select>
           <select
             aria-label="Load sample program"
             value=""
