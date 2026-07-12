@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { basicSetup } from 'codemirror';
 import { rust } from '@codemirror/lang-rust';
 import { linter, lintGutter } from '@codemirror/lint';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { analyze, type Analysis } from '../lang';
 import { SAMPLES, SEED_PROGRAM } from '../samples';
 import { toEditorDiagnostics } from './editorDiagnostics';
+import { baseEditorSetup } from './editorSetup';
+import {
+  DEFAULT_KEYMAP_PROFILE_ID,
+  keymapProfileExtension,
+} from './keymapProfiles';
 import {
   decodeProgramFromHash,
   encodeProgramToHash,
@@ -130,7 +134,8 @@ export function EditorPane({
       state: EditorState.create({
         doc: initial,
         extensions: [
-          basicSetup,
+          baseEditorSetup,
+          keymapProfileExtension(DEFAULT_KEYMAP_PROFILE_ID),
           rust(),
           lintGutter(),
           stackvizLinter,
