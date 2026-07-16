@@ -702,3 +702,66 @@ circle.ref-arrow-dangling {
     Consolas, monospace;
   font-size: 0.9rem;
 }
+
+/* Helix statusline and command line */
+.editor-host .cm-editor .cm-panels {
+  background: var(--bg-header);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  font-family:
+    'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.editor-host .cm-editor .cm-hx-status-panel {
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.75rem;
+}
+
+/* The mode indicator, styled like the app's status badges. NOR is the
+   default look; INS and SEL pick up the running/finished badge colors. */
+.editor-host .cm-editor .cm-hx-status-panel > span:first-child {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  color: var(--accent);
+}
+
+.editor-host
+  .cm-editor
+  .cm-hx-status-panel[data-hx-mode='INS']
+  > span:first-child {
+  color: #a6e3a1;
+  border-color: #a6e3a1;
+}
+
+.editor-host
+  .cm-editor
+  .cm-hx-status-panel[data-hx-mode='SEL']
+  > span:first-child {
+  color: #cba6f7;
+  border-color: #cba6f7;
+}
+
+.editor-host .cm-editor .cm-hx-command-panel {
+  padding: 0.2rem 0.75rem;
+}
+
+.editor-host .cm-editor .cm-hx-command-input {
+  color: var(--text);
+}
+
+.editor-host .cm-editor .cm-hx-command-help {
+  border-color: var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+}
+
+.editor-host .cm-editor .cm-hx-selected-option {
+  background: var(--accent);
+  color: var(--bg);
+}

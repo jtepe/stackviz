@@ -1,5 +1,10 @@
 import { Compartment, type Extension } from '@codemirror/state';
-import { keymap, type EditorView } from '@codemirror/view';
+import {
+  EditorView,
+  keymap,
+  runScopeHandlers,
+  type KeyBinding,
+} from '@codemirror/view';
 import {
   closeBracketsKeymap,
   completionKeymap,
@@ -8,7 +13,12 @@ import { defaultKeymap, historyKeymap } from '@codemirror/commands';
 import { foldKeymap } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { lintKeymap } from '@codemirror/lint';
-import { helix } from 'codemirror-helix';
+import {
+  helix,
+  commands as helixCommands,
+  type TypableCommand,
+} from 'codemirror-helix';
+import { saveProgram } from './programStorage';
 
 export interface KeymapProfile {
   id: string;
@@ -17,6 +27,46 @@ export interface KeymapProfile {
 }
 
 export const DEFAULT_KEYMAP_PROFILE_ID = 'default';
+
+const helixWriteCommand: TypableCommand = {
+  name: 'write',
+  aliases: ['w'],
+  help: 'Save the program to browser storage',
+  handler(view) {
+    saveProgram(view.state.doc.toString());
+    return { message: 'saved' };
+  },
+};
+
+// Re-dispatches a chord as one of Helix's own keys, so familiar shortcuts
+// route into Helix's modal handlers (its checkpoint history, its search
+// prompt) instead of the base editor's or the browser's. Always consumes
+// the chord: letting it fall through would trigger native browser undo or
+// find, bypassing both the Helix keymap and the editor entirely.
+function forwardToHelixKey(key: string): KeyBinding['run'] {
+  return (view) => {
+    runScopeHandlers(view, new KeyboardEvent('keydown', { key }), 'editor');
+    return true;
+  };
+}
+
+const helixChordAliases: readonly KeyBinding[] = [
+  { key: 'Mod-z', run: forwardToHelixKey('u') },
+  { key: 'Mod-y', run: forwardToHelixKey('U') },
+  { key: 'Mod-Shift-z', run: forwardToHelixKey('U') },
+  { key: 'Mod-f', run: forwardToHelixKey('/') },
+];
+
+// Mirrors the statusline's mode text (NOR/INS/SEL) onto a data attribute
+// so the mode indicator can be styled per mode from index.css.
+const helixModeAttribute = EditorView.updateListener.of((update) => {
+  const panel = update.view.dom.querySelector('.cm-hx-status-panel');
+  if (!(panel instanceof HTMLElement)) return;
+  const mode = panel.firstElementChild?.textContent ?? '';
+  if (panel.dataset.hxMode !== mode) {
+    panel.dataset.hxMode = mode;
+  }
+});
 
 // Matches the keymap bundled by codemirror's basicSetup, which the editor
 // used before keybindings became a swappable profile slot.
@@ -39,7 +89,12 @@ export const KEYMAP_PROFILES: readonly KeymapProfile[] = [
     id: 'helix',
     name: 'Helix',
     // drawSelection is disabled because baseEditorSetup already provides it.
-    extension: () => helix({ drawSelection: false }),
+    extension: () => [
+      helix({ drawSelection: false }),
+      helixCommands.of([helixWriteCommand]),
+      keymap.of([...helixChordAliases]),
+      helixModeAttribute,
+    ],
   },
 ];
 
