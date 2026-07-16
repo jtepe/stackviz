@@ -47,6 +47,26 @@ export function resolveKeymapProfile(id: string): KeymapProfile | null {
   return KEYMAP_PROFILES.find((profile) => profile.id === id) ?? null;
 }
 
+const PROFILE_STORAGE_KEY = 'stackviz:keymap-profile';
+
+export function loadPersistedKeymapProfileId(): string {
+  try {
+    const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (stored !== null && resolveKeymapProfile(stored)) return stored;
+  } catch {
+    // fall through to the default
+  }
+  return DEFAULT_KEYMAP_PROFILE_ID;
+}
+
+export function saveKeymapProfileId(id: string): void {
+  try {
+    localStorage.setItem(PROFILE_STORAGE_KEY, id);
+  } catch {
+    return;
+  }
+}
+
 const keymapProfileSlot = new Compartment();
 
 /** Initial editor extension holding the given profile's keybindings. */

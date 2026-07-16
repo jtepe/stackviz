@@ -5,7 +5,9 @@ import {
   KEYMAP_PROFILES,
   keymapProfileExtension,
   keymapProfileSlotContent,
+  loadPersistedKeymapProfileId,
   resolveKeymapProfile,
+  saveKeymapProfileId,
   setKeymapProfile,
 } from '../../src/ui/keymapProfiles';
 
@@ -104,6 +106,59 @@ describe('runtime keymap slot reconfigure', () => {
       expect(keymapProfileSlotContent(view)).toBe(before);
     } finally {
       view.destroy();
+    }
+  });
+});
+
+describe('keymap profile persistence', () => {
+  const STORAGE_KEY = 'stackviz:keymap-profile';
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('saves the selected profile id', () => {
+    saveKeymapProfileId('helix');
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('helix');
+  });
+
+  it('restores a saved profile id', () => {
+    localStorage.setItem(STORAGE_KEY, 'helix');
+    expect(loadPersistedKeymapProfileId()).toBe('helix');
+  });
+
+  it('falls back to default when nothing is stored', () => {
+    expect(loadPersistedKeymapProfileId()).toBe(DEFAULT_KEYMAP_PROFILE_ID);
+  });
+
+  it('falls back to default for an unknown stored id', () => {
+    localStorage.setItem(STORAGE_KEY, 'emacs');
+    expect(loadPersistedKeymapProfileId()).toBe(DEFAULT_KEYMAP_PROFILE_ID);
+  });
+
+  it('falls back to default when storage is unavailable', () => {
+    const getItem = vi
+      .spyOn(Storage.prototype, 'getItem')
+      .mockImplementation(() => {
+        throw new Error('storage disabled');
+      });
+    try {
+      expect(loadPersistedKeymapProfileId()).toBe(DEFAULT_KEYMAP_PROFILE_ID);
+    } finally {
+      getItem.mockRestore();
+    }
+  });
+
+  it('ignores save failures when storage is unavailable', () => {
+    const setItem = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new Error('storage disabled');
+      });
+    try {
+      expect(() => saveKeymapProfileId('helix')).not.toThrow();
+    } finally {
+      setItem.mockRestore();
     }
   });
 });

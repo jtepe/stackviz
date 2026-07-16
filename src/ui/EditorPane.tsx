@@ -9,9 +9,10 @@ import { SAMPLES, SEED_PROGRAM } from '../samples';
 import { toEditorDiagnostics } from './editorDiagnostics';
 import { baseEditorSetup } from './editorSetup';
 import {
-  DEFAULT_KEYMAP_PROFILE_ID,
   KEYMAP_PROFILES,
   keymapProfileExtension,
+  loadPersistedKeymapProfileId,
+  saveKeymapProfileId,
   setKeymapProfile,
 } from './keymapProfiles';
 import {
@@ -90,7 +91,7 @@ export function EditorPane({
   const onHoverOffsetRef = useRef(onHoverOffset);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [keymapProfileId, setKeymapProfileId] = useState(
-    DEFAULT_KEYMAP_PROFILE_ID,
+    loadPersistedKeymapProfileId,
   );
 
   useEffect(() => {
@@ -140,7 +141,7 @@ export function EditorPane({
         doc: initial,
         extensions: [
           baseEditorSetup,
-          keymapProfileExtension(DEFAULT_KEYMAP_PROFILE_ID),
+          keymapProfileExtension(loadPersistedKeymapProfileId()),
           rust(),
           lintGutter(),
           stackvizLinter,
@@ -213,6 +214,7 @@ export function EditorPane({
     if (!view) return;
     if (setKeymapProfile(view, id)) {
       setKeymapProfileId(id);
+      saveKeymapProfileId(id);
       view.focus();
     }
   };
