@@ -27,9 +27,7 @@ const doc = () =>
   page.evaluate(() =>
     // internal but stable enough for a demo script: the content DOM node
     // links back to the EditorView, whose state holds the true document
-    document
-      .querySelector('.cm-content')
-      .cmTile.root.view.state.doc.toString(),
+    document.querySelector('.cm-content').cmTile.root.view.state.doc.toString(),
   );
 
 await page.addInitScript(() => localStorage.clear());
@@ -64,15 +62,14 @@ check('i enters INS', (await mode()) === 'INS', await mode());
 await page.keyboard.type('// helix was here\n');
 await page.keyboard.press('Escape');
 check('Escape returns to NOR', (await mode()) === 'NOR', await mode());
-check('insert-mode typing edited the doc', (await doc()).includes('// helix was here'));
+check(
+  'insert-mode typing edited the doc',
+  (await doc()).includes('// helix was here'),
+);
 await page.keyboard.press('v');
 check('v enters SEL', (await mode()) === 'SEL', await mode());
 const selColor = await modeBadge().evaluate((el) => getComputedStyle(el).color);
-check(
-  'SEL badge is recolored',
-  selColor === 'rgb(203, 166, 247)',
-  selColor,
-);
+check('SEL badge is recolored', selColor === 'rgb(203, 166, 247)', selColor);
 await page.keyboard.press('Escape');
 check('Escape leaves SEL', (await mode()) === 'NOR', await mode());
 
