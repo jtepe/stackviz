@@ -15,6 +15,7 @@ import {
   saveKeymapProfileId,
   setKeymapProfile,
 } from './keymapProfiles';
+import { loadPersistedProgram, saveProgram } from './programStorage';
 import {
   decodeProgramFromHash,
   encodeProgramToHash,
@@ -30,30 +31,13 @@ import {
   type HighlightRange,
 } from './editorHighlight';
 
-const STORAGE_KEY = 'stackviz:program';
 const DIAGNOSTIC_DEBOUNCE_MS = 300;
 const SHARE_NOTICE_MS = 2000;
-
-function loadPersistedProgram(): string | null {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
 
 function loadInitialProgram(): string {
   const shared = decodeProgramFromHash(window.location.hash);
   if (shared !== null) return shared;
   return loadPersistedProgram() ?? SEED_PROGRAM;
-}
-
-function saveProgram(source: string): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, source);
-  } catch {
-    return;
-  }
 }
 
 function clearProgramHash(): void {

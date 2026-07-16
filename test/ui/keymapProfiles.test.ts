@@ -1,5 +1,6 @@
 import { EditorState } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, runScopeHandlers } from '@codemirror/view';
+import { commands as helixCommands } from 'codemirror-helix';
 import {
   DEFAULT_KEYMAP_PROFILE_ID,
   KEYMAP_PROFILES,
@@ -106,6 +107,121 @@ describe('runtime keymap slot reconfigure', () => {
       expect(keymapProfileSlotContent(view)).toBe(before);
     } finally {
       view.destroy();
+    }
+  });
+});
+
+describe('helix profile', () => {
+  function createHelixView(doc = 'fn main() {}'): EditorView {
+    return new EditorView({
+      state: EditorState.create({
+        doc,
+        extensions: [keymapProfileExtension('helix')],
+      }),
+    });
+  }
+
+  function press(view: EditorView, key: string, mods?: KeyboardEventInit) {
+    runScopeHandlers(
+      view,
+      new KeyboardEvent('keydown', { key, ...mods }),
+      'editor',
+    );
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('registers a :write command aliased to :w', () => {
+    const view = createHelixView();
+    try {
+      const write = view.state
+        .facet(helixCommands)
+        .flat()
+        .find((command) => command.name === 'write');
+      expect(write).toBeDefined();
+      expect(write?.aliases).toContain('w');
+    } finally {
+      view.destroy();
+    }
+  });
+
+  it(':write saves the program and reports a notice', () => {
+    const view = createHelixView('fn saved() {}');
+    try {
+      const write = view.state
+        .facet(helixCommands)
+        .flat()
+        .find((command) => command.name === 'write');
+      const result = write?.handler(view, []);
+      expect(localStorage.getItem('stackviz:program')).toBe('fn saved() {}');
+      expect(result).toEqual({ message: 'saved' });
+    } finally {
+      view.destroy();
+    }
+  });
+
+  it('mirrors the current mode onto the statusline data attribute', () => {
+    const view = createHelixView();
+    try {
+      const panel = () =>
+        view.dom.querySelector<HTMLElement>('.cm-hx-status-panel');
+
+      press(view, 'i');
+      expect(panel()?.dataset.hxMode).toBe('INS');
+
+      press(view, 'Escape');
+      expect(panel()?.dataset.hxMode).toBe('NOR');
+
+      press(view, 'v');
+      expect(panel()?.dataset.hxMode).toBe('SEL');
+    } finally {
+      view.destroy();
+    }
+  });
+
+  it('routes Mod-z / Mod-y to helix undo and redo', () => {
+    const view = createHelixView('fn main() {}');
+    try {
+      press(view, 'i');
+      view.dispatch({ changes: { from: 0, insert: 'X' } });
+      press(view, 'Escape');
+      expect(view.state.doc.toString()).toBe('Xfn main() {}');
+
+      press(view, 'z', { ctrlKey: true });
+      expect(view.state.doc.toString()).toBe('fn main() {}');
+
+      press(view, 'y', { ctrlKey: true });
+      expect(view.state.doc.toString()).toBe('Xfn main() {}');
+    } finally {
+      view.destroy();
+    }
+  });
+
+  it('routes Mod-f to the helix search prompt', () => {
+    const view = createHelixView();
+    try {
+      expect(view.dom.querySelector('.cm-hx-command-panel input')).toBeNull();
+      press(view, 'f', { ctrlKey: true });
+      expect(
+        view.dom.querySelector('.cm-hx-command-panel input'),
+      ).not.toBeNull();
+    } finally {
+      view.destroy();
+    }
+  });
+
+  it('binds the aliased chords in the helix profile keymap', () => {
+    const state = EditorState.create({
+      extensions: [keymapProfileExtension('helix')],
+    });
+    const keys = state
+      .facet(keymap)
+      .flat()
+      .map((binding) => binding.key);
+    for (const key of ['Mod-z', 'Mod-y', 'Mod-Shift-z', 'Mod-f']) {
+      expect(keys).toContain(key);
     }
   });
 });
