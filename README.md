@@ -71,6 +71,17 @@ npm run preview
 
 Serves the built app locally for testing.
 
+**Container:**
+
+No local toolchain needed — build and run the app from the [Containerfile](Containerfile) with Podman or Docker:
+
+```bash
+podman build -f Containerfile -t stackviz .
+podman run --rm -p 8080:80 stackviz
+```
+
+(Substitute `docker` for `podman` if you prefer.) The image is a layered multi-stage build: dependencies are installed in their own cached layer, the app is compiled in a Node build stage, and only the static `dist/` output is copied into a slim nginx runtime image. The app is then served at [http://localhost:8080](http://localhost:8080).
+
 **Tests:**
 
 ```bash
