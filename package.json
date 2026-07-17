@@ -4,6 +4,9 @@
   "description": "Interactive call stack visualizer for a Rust-flavored pseudo language",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
